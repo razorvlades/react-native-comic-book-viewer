@@ -1,121 +1,113 @@
-import React, { Component } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Animated,
   Dimensions,
   StatusBar,
   StyleSheet,
+  SafeAreaView
 } from 'react-native';
+
 import Gallery from './gallery';
 import Header from './Header';
 import Footer from './Footer';
 
+const ComicBookViewer = (props) => {
 
-
-type Props = {};
-export default class ComicBookViewer extends Component<Props> {
-  constructor(props) {
-    super(props);
-    this.listRef = React.createRef();
-    this.footerRef = React.createRef();
-    const { pages, totalPages } = props;
-    const loading = new Array(totalPages);
-    loading.fill(false);
-    this.currentIndex = 0;
-    this.state = {
-      width: Dimensions.get('window').width,
-      height: Dimensions.get('window').height,
-      orientation: this.isPortrait() ? 'portrait' : 'landscape',
-      isDisabled: false,
-      currentIndex: 0,
-      fadeAnim: new Animated.Value(1),
-    };
-  }
-
-  componentDidMount() {
-    const { fadeAnim } = this.state;
-    Animated.timing(
-      fadeAnim,
-      { toValue: 0, duration: 3000 },
-    ).start();
-    this.setState(state => ({
-      isDisabled: !state.isDisabled,
-    }));
-    Dimensions.addEventListener('change', ({ window }) => {
-      this.setState({
-        orientation: this.isPortrait() ? 'portrait' : 'landscape',
-        width: window.width,
-        height: window.height,
-      });
-    });
-  }
-
-  handleSliderValueChange = (currentIndex) => {
-    this.setState({ currentIndex });
-    this.currentIndex = currentIndex;
-    this.listRef.current.getViewPagerInstance().flingToPage(currentIndex, 1);
-    this.props.onPageChange(currentIndex);
-  }
-
-  handleClick = (arg) => {
-    const { fadeAnim, width, currentIndex } = this.state;
-    const { totalPages } = this.props;
-    if (arg.x0 > (width * 2 / 3)) {
-      const newIndex = currentIndex < (totalPages - 1) ? currentIndex + 1 : currentIndex;
-      this.currentIndex = newIndex;
-      this.setState(({ currentIndex: newIndex }));
-      this.listRef.current.getViewPagerInstance().flingToPage(newIndex, 1);
-      this.footerRef.current.forceUpdate();
-    } else if (arg.x0 < (width / 3)) {
-      const newIndex = currentIndex > 0 ? currentIndex - 1 : currentIndex;
-      this.currentIndex = newIndex;
-      this.setState(({ currentIndex: newIndex }));
-      this.listRef.current.getViewPagerInstance().flingToPage(newIndex, 1);
-      this.footerRef.current.forceUpdate();
-    } else {
-      Animated.timing(
-        fadeAnim,
-        { toValue: 1 - fadeAnim._value, duration: 50 },
-      ).start();
-      this.setState(state => ({
-        isDisabled: !state.isDisabled,
-      }));
-    }
-  };
-
-  snapToItem = (index) => {
-    this.listRef.current.getViewPagerInstance().flingToPage(index);
-    this.currentIndex = index;
-    this.footerRef.current.forceUpdate();
-  }
-
-  isPortrait = () => {
+  const isPortrait = () => {
     const dim = Dimensions.get('screen');
     return dim.height >= dim.width;
   };
 
-  handleLayout = (event) => {
-    const { width } = this.state;
-    if (event.nativeEvent.layout.width !== width) {
-      this.hasLayout = true;
-      this.setState({
-        width: event.nativeEvent.layout.width,
-        height: event.nativeEvent.layout.height,
-      });
+
+  const [width, setWidth] = useState(Dimensions.get('window').width);
+  const [height, setHeight] = useState(Dimensions.get('window').height);
+  const [orientation, setOrientation] = useState(isPortrait() ? 'portrait' : 'landscape');
+  const [isDisabled, setDisabled] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [fadeAnim, setFadeAnim] = useState(new Animated.Value(1));
+
+  const {
+    pages,
+    totalPages,
+    title,
+    pubYear,
+    issueNumber,
+    onClose,
+    comicType,
+    horizontal,
+    inverted,
+    onPageChange,
+    volumeNumber,
+  } = props;
+
+
+  listRef = React.createRef();
+  footerRef = React.createRef();
+
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, { toValue: 0, duration: 3000 }).start();
+    setDisabled(!isDisabled)
+    Dimensions.addEventListener('change', ({ window }) => {
+      setOrientation(isPortrait() ? 'portrait' : 'landscape')
+      setWidth(window.width)
+      setHeight(window.height)
+    });
+  }, [])
+
+  const handleSliderValueChange = (index) => {
+    setCurrentIndex(index)
+    listRef.current.getViewPagerInstance().flingToPage(index, 1);
+    props.onPageChange(index);
+  }
+
+  const handleClick = (arg) => {
+    if (arg.x0 > (width * 2 / 3)) {
+      let newIndex = currentIndex < (totalPages - 1) ? currentIndex + 1 : currentIndex;
+
+      setCurrentIndex(newIndex)
+      listRef.current.getViewPagerInstance().flingToPage(newIndex, 1);
+      footerRef.current.forceUpdate();
+    } else if (arg.x0 < (width / 3)) {
+      let newIndex = currentIndex > 0 ? currentIndex - 1 : currentIndex;
+
+      setCurrentIndex(newIndex)
+      listRef.current.getViewPagerInstance().flingToPage(newIndex, 1);
+      footerRef.current.forceUpdate();
+    } else {
+      Animated.timing(fadeAnim, { toValue: 1 - fadeAnim._value, duration: 50 },).start();
+      setDisabled(!isDisabled)
     }
   };
 
-  render() {
-    const { pages, totalPages, title, pubYear, issueNumber, onClose, comicType, horizontal, inverted, onPageChange, volumeNumber, } = this.props;
-    const { fadeAnim, orientation, isDisabled, width, } = this.state;
-    return (
+  const snapToItem = (index) => {
+    listRef.current.getViewPagerInstance().flingToPage(index);
+    setCurrentIndex(index)
+    footerRef.current.forceUpdate();
+  }
+
+
+  const handleLayout = (event) => {
+    if (event.nativeEvent.layout.width !== width) {
+      hasLayout = true;
+      setWidth(event.nativeEvent.layout.width)
+      setHeight(event.nativeEvent.layout.height)
+    }
+  };
+
+
+  return (
+    <SafeAreaView
+      style={styles.container}
+    >
       <Animated.View
-        style={styles.container}
-        onLayout={this.handleLayout}
+        style={styles.content}
+        onLayout={handleLayout}
       >
         <StatusBar hidden />
         <Animated.View style={[styles.header, { opacity: 1 }]}>
           <Header
-            currentIndex={this.currentIndex || 0}
+            currentIndex={currentIndex || 0}
             title={title}
             pubYear={pubYear}
             issueNumber={issueNumber}
@@ -129,16 +121,14 @@ export default class ComicBookViewer extends Component<Props> {
           ref={this.listRef}
           style={{ flex: 1, backgroundColor: 'black' }}
           images={pages}
-          onSingleTapConfirmed={(currentIndex, evt, gestureState) => {
-            this.currentIndex = currentIndex;
-            this.handleClick(gestureState);
+          onSingleTapConfirmed={(index, evt, gestureState) => {
+            setCurrentIndex(index)
+            handleClick(gestureState);
           }}
-          onPageSelected={(currentIndex) => {
-            this.setState({ currentIndex });
-            this.currentIndex = currentIndex;
-            onPageChange(currentIndex);
-            // console.log(this.currentIndex);
-            this.footerRef.current?.forceUpdate();
+          onPageSelected={(setIndex) => {
+            setCurrentIndex(setIndex)
+            onPageChange(setIndex);
+            footerRef.current?.forceUpdate();
           }}
           horizontal={horizontal}
           inverted={inverted}
@@ -147,21 +137,27 @@ export default class ComicBookViewer extends Component<Props> {
         />
         <Animated.View style={[styles.footer, { opacity: 1 }, orientation === 'portrait' ? {} : { bottom: 0 }]}>
           <Footer
-            ref={this.footerRef}
-            currentIndex={this.currentIndex || 0}
+            ref={footerRef}
+            currentIndex={currentIndex || 0}
             totalPages={totalPages}
-            onValueChange={this.handleSliderValueChange}
+            onValueChange={handleSliderValueChange}
             isDisabled={isDisabled}
             width={width}
           />
         </Animated.View>
       </Animated.View>
-    );
-  }
+    </SafeAreaView>
+  );
 }
+
+export default ComicBookViewer;
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    backgroundColor: 'black',
+  },
+  content: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
