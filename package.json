@@ -4,7 +4,9 @@
   "description": "Comic book reader / Sequential Image Viewer for React Native",
   "main": "src/index.js",
   "scripts": {
-    "start": "node node_modules/react-native/local-cli/cli.js start",
+    "android": "react-native run-android",
+    "ios": "react-native run-ios",
+    "start": "react-native start",
     "test": "jest",
     "lint": "eslint ."
   },
@@ -28,9 +30,10 @@
   },
   "homepage": "https://github.com/JunctionTV/react-native-comic-book-viewer#readme",
   "dependencies": {
-    "@react-native-community/slider": "^1.0.4",
-    "react": "^16.8.6",
-    "react-native": "^0.59.3",
+    "@react-native-community/slider": "^4.0.0-rc.3",
+    "react": "17.0.1",
+    "react-native": "0.64.0",
+    "react-native-eject": "^0.1.2",
     "react-native-image-gallery": "^2.1.5",
     "react-native-snap-carousel": "^3.7.5"
   },

@@ -1,0 +1,6 @@
+module Pods_ComicReader_ComicReaderTests {
+  umbrella header "Pods-ComicReader-ComicReaderTests-umbrella.h"
+
+  export *
+  module * { export * }
+}
